@@ -1,33 +1,27 @@
 package servidor;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Servidor {
 
     public static void main(String[] args) {
 
-        String mensagemRetorno;
+        ArrayList<PrintStream> clientes = new ArrayList<>();//Array para guardar os clientes
 
         try {
-            ServerSocket server = new ServerSocket(2000);
+            ServerSocket server = new ServerSocket(2000);//Inicia o servidor instanciando o server socket
             Socket socket;
 
             while (true) {
                 socket = server.accept();
-
-                InputStreamReader isr = new InputStreamReader(socket.getInputStream());
-                BufferedReader br = new BufferedReader(isr);
-
-                while ((mensagemRetorno = br.readLine()) != null) {
-
-                    System.out.println(mensagemRetorno);
-
-                }
-
+                //salva o endereco do cliente
+                clientes.add(new PrintStream(socket.getOutputStream()));
+                
+                   Mensagem mensagem = new Mensagem(socket.clientes);
+                   
             }
 
         } catch (IOException e) {
