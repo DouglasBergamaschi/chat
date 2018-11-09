@@ -20,7 +20,8 @@ public class Servidor {
                 //salva o endereco do cliente
                 clientes.add(new PrintStream(socket.getOutputStream()));
                 
-                   Mensagem mensagem = new Mensagem(socket.clientes);
+                   Mensagem mensagem = new Mensagem(socket,clientes);
+                  
                    
             }
 

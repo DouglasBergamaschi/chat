@@ -23,6 +23,10 @@ public class Mensagem {
         return clientes;
     }
 
+    public void setClientes(ArrayList<PrintStream> clientes) {
+        this.clientes = clientes;
+    }
+
     public Mensagem(Socket s, ArrayList<PrintStream> clientes) {
         this.s = s;
         this.clientes = clientes;
@@ -33,20 +37,29 @@ public class Mensagem {
 
     private void Thread() {
 
-        String mensagem = "";
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
 
-        try {
-            InputStreamReader isr = new InputStreamReader(s.getInputStream());
-            BufferedReader br = new BufferedReader(isr);
+                String mensagem = "";
 
-            while ((mensagem = br.readLine()) != null) {
+                try {
+                    InputStreamReader isr = new InputStreamReader(s.getInputStream());
+                    BufferedReader br = new BufferedReader(isr);
 
-                enviarMensagem(mensagem);
+                    while ((mensagem = br.readLine()) != null) {
+
+                        enviarMensagem(mensagem);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
+        });
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        t.start(); 
     }
 
     public void enviarMensagem(String mensagem) {

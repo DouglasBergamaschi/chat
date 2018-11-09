@@ -1,5 +1,9 @@
 package client;
 
+import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.*;
 import javax.swing.JOptionPane;
@@ -8,9 +12,19 @@ import jdk.net.Sockets;
 
 public class Chat extends javax.swing.JFrame {
 
+    private String nome;
     private Socket s;
+    private BufferedReader br;
+    private InputStreamReader isr;
+    private boolean executar;
 
-    public Chat() {
+    //construtor
+    public Chat(String nome) {
+
+        initComponents();
+        executar = true;
+        this.nome = nome;
+
         try {
             s = new Socket("localhost", 2000);
 
@@ -18,7 +32,37 @@ public class Chat extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "Não conseguiu se conectar ao servidor", "", ERROR_MESSAGE);
             System.exit(0);
         }
-        initComponents();
+        Thread();
+    }
+
+    private void Thread() {
+
+        Thread t = new Thread(new Runnable() {
+            String mensagem;
+
+            @Override
+            public void run() {
+
+                try {
+                    isr = new InputStreamReader(s.getInputStream());
+                    br = new BufferedReader(isr);
+
+                    while ((mensagem = br.readLine()) != null) {
+
+                        mensagemRetorno.setText(mensagemRetorno.getText() + mensagem + "\n");
+                        
+                        if(!executar){
+                            break;
+                        }
+                        
+                    }
+
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(null, "Erro na conexão com o Servidor!!", "", ERROR_MESSAGE);
+                }
+            }
+        });
+        t.start();
     }
 
     @SuppressWarnings("unchecked")
@@ -26,21 +70,26 @@ public class Chat extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        mensageRetorno = new javax.swing.JTextArea();
+        mensagemRetorno = new javax.swing.JTextArea();
         jScrollPane2 = new javax.swing.JScrollPane();
         mensagemEnvia = new javax.swing.JTextArea();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        mensageRetorno.setEditable(false);
-        mensageRetorno.setColumns(20);
-        mensageRetorno.setRows(5);
-        jScrollPane1.setViewportView(mensageRetorno);
+        mensagemRetorno.setEditable(false);
+        mensagemRetorno.setColumns(20);
+        mensagemRetorno.setRows(5);
+        jScrollPane1.setViewportView(mensagemRetorno);
 
         mensagemEnvia.setColumns(20);
         mensagemEnvia.setRows(5);
+        mensagemEnvia.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                mensagemEnviaKeyPressed(evt);
+            }
+        });
         jScrollPane2.setViewportView(mensagemEnvia);
 
         jButton1.setText("Enviar");
@@ -50,7 +99,12 @@ public class Chat extends javax.swing.JFrame {
             }
         });
 
-        jButton2.setText("jButton2");
+        jButton2.setText("Sair");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -89,21 +143,53 @@ public class Chat extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 
-        String mensagem;
+        String mensagem = nome + " disse: ";
 
         try {
             PrintStream ps = new PrintStream(s.getOutputStream());
-            mensagem = mensagemEnvia.getText();
+            mensagem += mensagemEnvia.getText();
 
             ps.println(mensagem);
             ps.flush();
 
             mensagemEnvia.setText("");
-        } catch (Exception e) {
+        } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Não enviou a mensagem", "", ERROR_MESSAGE);
         }
 
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void mensagemEnviaKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_mensagemEnviaKeyPressed
+        if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+            String mensagem = nome + " disse: ";
+
+            try {
+                PrintStream ps = new PrintStream(s.getOutputStream());
+                mensagem += mensagemEnvia.getText();
+
+                ps.println(mensagem);
+                ps.flush();
+
+                mensagemEnvia.setText("");
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Não enviou a mensagem", "", ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_mensagemEnviaKeyPressed
+//botao sair
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        try{
+        
+        s.close();
+        System.exit(0);
+            
+        }catch(IOException e){
+            e.printStackTrace();
+            
+        }
+        
+        
+    }//GEN-LAST:event_jButton2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -111,8 +197,8 @@ public class Chat extends javax.swing.JFrame {
     private javax.swing.JButton jButton2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTextArea mensageRetorno;
     private javax.swing.JTextArea mensagemEnvia;
+    private javax.swing.JTextArea mensagemRetorno;
     // End of variables declaration//GEN-END:variables
 
     void visible() {
